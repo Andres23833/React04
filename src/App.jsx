@@ -1,39 +1,30 @@
 import "./App.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ContactoCard from "./components/contactocard";
 import FormularioContacto from "./components/FormularioContacto";
 
 function App() {
   const [buscar, setBuscar] = useState("");
-  const [contactos, setContactos] = useState([
-    {
-      nombre: "Andrés Taborda",
-      telefono: "3001234567",
-      correo: "andres@gmail.com",
-      etiqueta: "Estudiante",
-    },
-    {
-      nombre: "María González",
-      telefono: "3019876543",
-      correo: "maria@gmail.com",
-      etiqueta: "Amiga",
-    },
-    {
-      nombre: "Carlos Ramírez",
-      telefono: "3025559988",
-      correo: "carlos@gmail.com",
-      etiqueta: "Cliente",
-    },
-    {
-      nombre: "Juan Pérez",
-      telefono: "3201112233",
-      correo: "juan@gmail.com",
-      etiqueta: "Instructor",
-    },
-  ]);
 
+  // 1. Carga inicial desde LocalStorage
+  const [contactos, setContactos] = useState(() => {
+    const contactosGuardados = localStorage.getItem("contactos");
+    return contactosGuardados ? JSON.parse(contactosGuardados) : [];
+  });
+
+  // 2. Persistencia automática cada vez que cambia el estado
+  useEffect(() => {
+    localStorage.setItem("contactos", JSON.stringify(contactos));
+  }, [contactos]);
+
+  // Función para agregar contacto
   const agregarContacto = (nuevoContacto) => {
-    setContactos([...contactos, nuevoContacto]);
+    setContactos((prev) => [...prev, nuevoContacto]);
+  };
+
+  // 3. Función para eliminar contacto por correo
+  const eliminarContacto = (correo) => {
+    setContactos((prev) => prev.filter((c) => c.correo !== correo));
   };
 
   const contactosFiltrados = contactos.filter((contacto) =>
@@ -42,11 +33,10 @@ function App() {
 
   return (
     <div className="contenedor">
-
       <header className="encabezado">
         <h1>📒 Agenda ADSO</h1>
         <p className="subtitulo">
-          Lista de contactos realizados con React
+          Lista de contactos realizados con React y LocalStorage
         </p>
       </header>
 
@@ -61,32 +51,26 @@ function App() {
       </div>
 
       <div className="contenido">
-
         <aside className="lado-izquierdo">
           <FormularioContacto agregarContacto={agregarContacto} />
         </aside>
 
         <section className="lado-derecho">
-
           <h2>Directorio de Contactos</h2>
 
           {contactosFiltrados.length > 0 ? (
-            contactosFiltrados.map((contacto, index) => (
+            contactosFiltrados.map((contacto) => (
               <ContactoCard
-                key={index}
+                key={contacto.correo}
                 contacto={contacto}
+                onEliminar={eliminarContacto}
               />
             ))
           ) : (
-            <p className="mensaje">
-              No se encontraron contactos.
-            </p>
+            <p className="mensaje">No se encontraron contactos.</p>
           )}
-
         </section>
-
       </div>
-
     </div>
   );
 }

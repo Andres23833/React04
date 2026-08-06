@@ -17,7 +17,7 @@ function ContactoCard({ contacto, onEliminar }) {
         </span>
       </div>
 
-      {/* Botón de eliminar requerido por la guía */}
+      {/* Botón para activar la función de eliminar */}
       <button 
         onClick={() => onEliminar(contacto.correo)}
         style={{
