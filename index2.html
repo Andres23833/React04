@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clase 4 — useState y Formularios Controlados · Agenda ADSO v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0f2a1e;
+    --bg-deep-2:#123422;
+    --paper:#f1efe3;
+    --paper-2:#e8e4d2;
+    --ink:#152018;
+    --ink-soft:#3d4a3f;
+    --green:#1c8c4e;
+    --green-bright:#28b366;
+    --amber:#d9a441;
+    --red:#c62828;
+    --line: rgba(21,32,24,0.12);
+    --line-dark: rgba(241,239,227,0.14);
+    --shadow: 0 20px 50px rgba(15,42,30,0.18);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:'Inter', sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.55;
+  }
+  ::selection{ background:var(--amber); color:var(--ink); }
+
+  h1,h2,h3,h4{
+    font-family:'Space Grotesk', sans-serif;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  code, pre, .mono{ font-family:'JetBrains Mono', monospace; }
+
+  a{color:inherit;}
+
+  /* ---------- layout shell ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns: 232px 1fr;
+  }
+  @media (max-width: 880px){
+    .shell{ grid-template-columns: 1fr; }
+    .rail{ display:none; }
+  }
+
+  .rail{
+    position:sticky;
+    top:0;
+    height:100vh;
+    background:var(--bg-deep);
+    color:var(--paper);
+    padding:28px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:26px;
+    border-right:1px solid var(--line-dark);
+  }
+  .rail-brand{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    color:rgba(241,239,227,0.55);
+  }
+  .rail-title{
+    font-size:19px;
+    font-weight:600;
+    line-height:1.3;
+  }
+  .rail-title span{ color:var(--green-bright); }
+  .rail-nav{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    margin-top:6px;
+    overflow-y:auto;
+  }
+  .rail-nav a{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    text-decoration:none;
+    color:rgba(241,239,227,0.55);
+    font-size:13.5px;
+    padding:8px 8px;
+    border-radius:8px;
+    transition:.2s;
+  }
+  .rail-nav a .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:rgba(241,239,227,0.35);
+    min-width:20px;
+  }
+  .rail-nav a:hover, .rail-nav a.active{
+    background:rgba(241,239,227,0.08);
+    color:#fff;
+  }
+  .rail-nav a.active .num{ color:var(--amber); }
+  .rail-foot{
+    margin-top:auto;
+    font-size:11.5px;
+    color:rgba(241,239,227,0.4);
+    border-top:1px solid var(--line-dark);
+    padding-top:14px;
+  }
+
+  main{ min-width:0; }
+
+  section{
+    padding:88px 64px;
+    max-width:980px;
+    margin:0 auto;
+    border-bottom:1px solid var(--line);
+  }
+  @media (max-width: 640px){
+    section{ padding:64px 24px; }
+  }
+  section:last-of-type{ border-bottom:none; }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    color:var(--green);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:26px; height:1px;
+    background:var(--green);
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    background:radial-gradient(1200px 500px at 15% -10%, #164a2f 0%, var(--bg-deep) 55%, var(--bg-deep-2) 100%);
+    color:var(--paper);
+    padding:110px 64px 90px;
+    border-bottom:none;
+    max-width:none;
+    position:relative;
+    overflow:hidden;
+  }
+  @media (max-width: 640px){ .hero{ padding:80px 24px 60px; } }
+  .hero::after{
+    content:"</>";
+    position:absolute;
+    right:-30px; top:-40px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:280px;
+    font-weight:700;
+    color:rgba(241,239,227,0.045);
+    pointer-events:none;
+  }
+  .hero-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(241,239,227,0.08);
+    border:1px solid rgba(241,239,227,0.16);
+    padding:6px 14px;
+    border-radius:999px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--paper);
+    margin-bottom:28px;
+  }
+  .hero-tag .dot{ width:7px; height:7px; border-radius:50%; background:var(--green-bright); }
+  .hero h1{
+    font-size:clamp(34px, 5.4vw, 58px);
+    font-weight:700;
+    max-width:820px;
+    line-height:1.06;
+  }
+  .hero h1 .line2{ color:var(--green-bright); }
+  .hero-sub{
+    margin-top:22px;
+    font-size:17px;
+    max-width:600px;
+    color:rgba(241,239,227,0.72);
+  }
+  .hero-meta{
+    margin-top:44px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+    gap:22px;
+    max-width:760px;
+    border-top:1px solid rgba(241,239,227,0.16);
+    padding-top:26px;
+  }
+  .hero-meta div{ display:flex; flex-direction:column; gap:4px; }
+  .hero-meta .k{ font-size:11.5px; text-transform:uppercase; letter-spacing:.1em; color:rgba(241,239,227,0.45); }
+  .hero-meta .v{ font-size:14.5px; font-weight:500; }
+
+  /* ---------- intro quote ---------- */
+  .quote-card{
+    background:var(--bg-deep);
+    color:var(--paper);
+    border-radius:var(--radius);
+    padding:34px 38px;
+    position:relative;
+    box-shadow:var(--shadow);
+  }
+  .quote-card p{ font-size:17px; color:rgba(241,239,227,0.88); margin:0; }
+  .quote-card .who{ margin-top:16px; font-size:13px; color:var(--green-bright); font-family:'JetBrains Mono',monospace; }
+
+  /* ---------- objectives ---------- */
+  .obj-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+    margin-top:28px;
+  }
+  @media (max-width:640px){ .obj-grid{ grid-template-columns:1fr; } }
+  .obj-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 22px;
+    transition:.2s;
+  }
+  .obj-card:hover{ border-color:var(--green); transform:translateY(-2px); box-shadow:0 12px 26px rgba(28,140,78,0.12); }
+  .obj-card .n{ font-family:'JetBrains Mono',monospace; color:var(--green); font-size:13px; margin-bottom:10px; display:block;}
+  .obj-card p{ margin:0; font-size:15px; color:var(--ink-soft); }
+
+  /* ---------- theory concept cards ---------- */
+  .concept-row{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    margin-top:30px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:#fff;
+  }
+  .concept{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    gap:24px;
+    padding:24px 26px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .concept:last-child{ border-bottom:none; }
+  @media (max-width:640px){ .concept{ grid-template-columns:1fr; gap:8px; } }
+  .concept h4{ font-size:16.5px; color:var(--ink); }
+  .concept h4 .tag{
+    display:inline-block; margin-left:8px; font-family:'JetBrains Mono',monospace;
+    font-size:11px; color:var(--green); background:rgba(28,140,78,0.1); padding:2px 8px; border-radius:6px; vertical-align:middle;
+  }
+  .concept p{ margin:6px 0 0; color:var(--ink-soft); font-size:14.5px; }
+
+  /* ---------- file tree ---------- */
+  .tree{
+    margin-top:28px;
+    background:var(--bg-deep);
+    color:var(--paper);
+    border-radius:var(--radius);
+    padding:26px 30px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    line-height:2;
+    box-shadow:var(--shadow);
+  }
+  .tree .d1{ color:var(--green-bright); }
+  .tree .d2{ color:var(--amber); padding-left:22px; display:block; }
+  .tree .f{ padding-left:44px; display:block; color:rgba(241,239,227,0.85); }
+  .tree .f::before{ content:"› "; color:rgba(241,239,227,0.35); }
+
+  /* ---------- steps ---------- */
+  .steps{ margin-top:30px; display:flex; flex-direction:column; gap:14px; }
+  .step{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .step-head{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:20px 24px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .step-num{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:20px;
+    color:var(--green);
+    min-width:32px;
+  }
+  .step-head h4{ font-size:16px; flex:1; }
+  .step-chevron{
+    font-size:18px;
+    color:var(--ink-soft);
+    transition:transform .25s;
+  }
+  .step.open .step-chevron{ transform:rotate(180deg); }
+  .step-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s ease;
+    border-top:1px solid transparent;
+  }
+  .step.open .step-body{ border-top:1px solid var(--line); }
+  .step-body-inner{ padding:6px 24px 22px 74px; }
+  .step-body-inner ul{ margin:0; padding-left:18px; color:var(--ink-soft); font-size:14.5px; }
+  .step-body-inner li{ margin-bottom:6px; }
+
+  /* ---------- code panels ---------- */
+  .code-tabs{
+    display:flex;
+    gap:4px;
+    margin-top:34px;
+    flex-wrap:wrap;
+  }
+  .code-tab{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    padding:9px 16px;
+    border-radius:8px 8px 0 0;
+    background:var(--paper-2);
+    color:var(--ink-soft);
+    cursor:pointer;
+    border:1px solid var(--line);
+    border-bottom:none;
+  }
+  .code-tab.active{ background:var(--bg-deep); color:var(--paper); border-color:var(--bg-deep); }
+  .code-window{
+    background:var(--bg-deep);
+    border-radius:0 12px 12px 12px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .code-window-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line-dark);
+  }
+  .code-window-bar span{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .code-window-bar .r{ background:#e5605a; }
+  .code-window-bar .y{ background:#e0b04a; }
+  .code-window-bar .g{ background:var(--green-bright); }
+  .code-window-bar .path{
+    margin-left:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:rgba(241,239,227,0.5);
+  }
+  .code-panel{
+    display:none;
+    padding:22px 26px;
+    max-height:520px;
+    overflow:auto;
+  }
+  .code-panel.active{ display:block; }
+  .code-panel pre{
+    margin:0;
+    font-size:13px;
+    line-height:1.7;
+    color:#dce8de;
+    white-space:pre;
+  }
+  .kw{ color:#4fb3d9; }
+  .str{ color:var(--amber); }
+  .cmt{ color:#7a9484; font-style:italic; }
+  .tagn{ color:var(--green-bright); }
+  .attr{ color:#c99bd9; }
+  .fn{ color:#e5b563; }
+
+  /* ---------- live demo ---------- */
+  .demo-wrap{
+    margin-top:34px;
+    background:var(--bg-deep);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .demo-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 20px;
+    border-bottom:1px solid var(--line-dark);
+  }
+  .demo-bar-left{ display:flex; align-items:center; gap:8px; }
+  .demo-bar-left span{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .demo-bar .r{ background:#e5605a; } .demo-bar .y{ background:#e0b04a; } .demo-bar .g{ background:var(--green-bright); }
+  .demo-bar-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:rgba(241,239,227,0.55);
+    margin-left:10px;
+  }
+  .demo-live-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--green-bright);
+    display:flex; align-items:center; gap:6px;
+  }
+  .demo-live-badge .pulse{
+    width:7px;height:7px;border-radius:50%;background:var(--green-bright);
+    box-shadow:0 0 0 0 rgba(40,179,102,0.7);
+    animation:pulse 1.8s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(40,179,102,0.55); }
+    70%{ box-shadow:0 0 0 8px rgba(40,179,102,0); }
+    100%{ box-shadow:0 0 0 0 rgba(40,179,102,0); }
+  }
+  .demo-stage{
+    background:var(--paper);
+    padding:30px;
+  }
+
+  /* actual rendered app styling — matches App.css from the class */
+  .app-container { max-width: 480px; margin: 0 auto; font-family: 'Inter', sans-serif; }
+  .app-title { color:#008037; text-align:center; margin-bottom:1rem; font-family:'Space Grotesk',sans-serif; }
+  .form-contacto { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+  .form-contacto input { padding:8px; border-radius:6px; border:1px solid #ccc; font-size:14px; font-family:'Inter',sans-serif; }
+  .form-contacto button { background:#008037; color:#fff; border:0; padding:10px; border-radius:6px; cursor:pointer; font-size:14px; }
+  .form-contacto button:hover { background:#006b2f; }
+  .tarjeta-contacto { border:1px solid #ddd; border-radius:8px; padding:1rem; background:#fff; margin-bottom:.5rem; display:flex; flex-direction:column; gap:4px; }
+  .tarjeta-contacto h3 { color:#008037; margin:0 0 .3rem; font-family:'Space Grotesk',sans-serif; }
+  .tarjeta-contacto .dato{ margin:0; color:#333; font-size:14px; }
+  .tarjeta-contacto .tag{ margin:0; color:#555; font-size:0.85rem; }
+  .tarjeta-contacto .acciones{ margin-top:8px; display:flex; justify-content:flex-end; }
+  .btn-eliminar { margin-top:0; background:#c62828; color:#fff; border:0; padding:.5rem .75rem; border-radius:6px; cursor:pointer; font-size:13px; }
+  .btn-eliminar:hover { background:#8e0000; }
+  .empty-state{ text-align:center; color:#8a9188; font-size:13.5px; padding:18px 0; font-style:italic; }
+
+  .demo-note{
+    padding:16px 26px 26px;
+    font-size:13px;
+    color:rgba(241,239,227,0.55);
+    border-top:1px solid var(--line-dark);
+    background:var(--bg-deep-2);
+  }
+  .demo-note b{ color:var(--green-bright); font-weight:600; }
+
+  /* ---------- flow diagram ---------- */
+  .flow{
+    margin-top:30px;
+    display:flex;
+    align-items:stretch;
+    gap:0;
+    flex-wrap:wrap;
+  }
+  .flow-step{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    flex:1;
+    min-width:150px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .flow-step b{ display:block; color:var(--ink); font-family:'Space Grotesk',sans-serif; font-size:14.5px; margin-bottom:4px; }
+  .flow-arrow{
+    display:flex; align-items:center; justify-content:center;
+    padding:0 10px; color:var(--green); font-size:20px; font-weight:700;
+  }
+  @media (max-width:760px){ .flow{ flex-direction:column; } .flow-arrow{ transform:rotate(90deg); padding:6px 0; } }
+
+  /* ---------- checklist / verification ---------- */
+  .check-list{ margin-top:28px; display:flex; flex-direction:column; gap:10px; }
+  .check-item{
+    display:flex; align-items:flex-start; gap:14px;
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:14px 18px; cursor:pointer; transition:.15s;
+  }
+  .check-item:hover{ border-color:var(--green); }
+  .check-item.done{ background:rgba(28,140,78,0.06); border-color:var(--green); }
+  .check-box{
+    width:20px; height:20px; border-radius:6px; border:2px solid #cfd6cf;
+    flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:#fff; transition:.15s;
+  }
+  .check-item.done .check-box{ background:var(--green); border-color:var(--green); }
+  .check-item span.txt{ font-size:14.5px; color:var(--ink-soft); }
+  .check-item.done span.txt{ color:var(--ink); }
+  .note-box{
+    margin-top:18px; padding:14px 18px; border-radius:10px;
+    background:rgba(217,164,65,0.12); border:1px solid rgba(217,164,65,0.4);
+    font-size:13.5px; color:#6b501f;
+  }
+
+  /* ---------- questions ---------- */
+  .qa{ margin-top:28px; display:flex; flex-direction:column; gap:10px; }
+  .qa-item{ border:1px solid var(--line); border-radius:10px; background:#fff; overflow:hidden; }
+  .qa-q{
+    padding:16px 20px; cursor:pointer; font-weight:500; font-size:15px;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+  }
+  .qa-q .plus{ color:var(--green); font-size:18px; transition:transform .2s; flex-shrink:0; }
+  .qa-item.open .qa-q .plus{ transform:rotate(45deg); }
+  .qa-a{ max-height:0; overflow:hidden; transition:max-height .3s ease; }
+  .qa-item.open .qa-a{ border-top:1px solid var(--line); }
+  .qa-a-inner{ padding:14px 20px 18px; font-size:14px; color:var(--ink-soft); }
+
+  /* ---------- criteria ---------- */
+  .criteria{ margin-top:28px; display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  @media (max-width:640px){ .criteria{ grid-template-columns:1fr; } }
+  .criteria .c{
+    background:var(--bg-deep); color:var(--paper); border-radius:12px; padding:18px 20px;
+    display:flex; gap:12px; align-items:flex-start; font-size:14px;
+  }
+  .criteria .c .ok{ color:var(--green-bright); font-size:16px; }
+
+  footer.page-foot{
+    padding:40px 64px 60px;
+    max-width:980px;
+    margin:0 auto;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail">
+    <div>
+      <div class="rail-brand">SENA · ADSO · CTMA</div>
+      <div class="rail-title">Clase 4<br><span>useState &amp; formularios</span></div>
+    </div>
+    <div class="rail-nav" id="railNav">
+      <a href="#intro"><span class="num">00</span> Introducción</a>
+      <a href="#objetivos"><span class="num">01</span> Objetivos</a>
+      <a href="#teoria"><span class="num">02</span> Marco teórico</a>
+      <a href="#estructura"><span class="num">03</span> Estructura</a>
+      <a href="#pasos"><span class="num">04</span> Paso a paso</a>
+      <a href="#codigo"><span class="num">05</span> Código &amp; demo viva</a>
+      <a href="#verificacion"><span class="num">06</span> Verificación</a>
+      <a href="#actividades"><span class="num">07</span> Actividades</a>
+      <a href="#preguntas"><span class="num">08</span> Preguntas</a>
+      <a href="#criterios"><span class="num">09</span> Criterios de logro</a>
+    </div>
+    <div class="rail-foot">Proyecto Integrador<br>Agenda ADSO (ABP 2025)</div>
+  </nav>
+
+  <main>
+    <section class="hero" id="intro">
+      <div class="hero-tag"><span class="dot"></span> AP: Desarrollo Web — ReactJS</div>
+      <h1>useState y formularios<br><span class="line2">controlados.</span></h1>
+      <p class="hero-sub">Hoy le damos vida al proyecto: conectamos un formulario con el estado para agregar contactos a la agenda, y aprendemos a eliminarlos cuando sea necesario.</p>
+      <div class="hero-meta">
+        <div><span class="k">Programa</span><span class="v">Análisis y Desarrollo de Software</span></div>
+        <div><span class="k">Instructores</span><span class="v">Gustavo Bolaños · Cristian Acevedo</span></div>
+        <div><span class="k">Proyecto</span><span class="v">Agenda ADSO v2 (ABP 2025)</span></div>
+        <div><span class="k">Centro</span><span class="v">CTMA · Regional Antioquia</span></div>
+      </div>
+    </section>
+
+    <section id="intro-2">
+      <div class="eyebrow">Introducción del instructor</div>
+      <div class="quote-card">
+        <p>"Como su instructor, hoy vamos a darle vida al proyecto conectando un formulario con el estado para agregar contactos a la agenda y además eliminarlos cuando sea necesario. Esta clase consolida el manejo de useState, eventos, formularios controlados y el flujo de datos componente hijo → componente padre."</p>
+        <div class="who">— Gustavo Bolaños</div>
+      </div>
+    </section>
+
+    <section id="objetivos">
+      <div class="eyebrow">01 · Objetivos de aprendizaje</div>
+      <h2 style="font-size:30px;">¿Qué vamos a lograr hoy?</h2>
+      <div class="obj-grid">
+        <div class="obj-card"><span class="n">OBJ · 01</span><p>Comprender el concepto de estado (state) en React y el hook <code>useState</code>.</p></div>
+        <div class="obj-card"><span class="n">OBJ · 02</span><p>Implementar formularios controlados: inputs sincronizados con el estado.</p></div>
+        <div class="obj-card"><span class="n">OBJ · 03</span><p>Enviar datos del hijo (<code>FormularioContacto</code>) al padre (<code>App</code>) mediante props/callback.</p></div>
+        <div class="obj-card"><span class="n">OBJ · 04</span><p>Mostrar la lista de contactos y eliminar un registro por <code>id</code>.</p></div>
+      </div>
+    </section>
+
+    <section id="teoria">
+      <div class="eyebrow">02 · Marco teórico breve</div>
+      <h2 style="font-size:30px;">Los cinco conceptos clave</h2>
+      <div class="concept-row">
+        <div class="concept"><h4>Estado (state)</h4><p>Memoria interna del componente. Al cambiar, React vuelve a renderizar para reflejar la UI actual.</p></div>
+        <div class="concept"><h4>Hook useState <span class="tag">hook</span></h4><p>Permite crear y actualizar estado dentro de un componente funcional.</p></div>
+        <div class="concept"><h4>Formulario controlado</h4><p>Cada <code>&lt;input&gt;</code> refleja y actualiza el estado mediante <code>value</code> + evento <code>onChange</code>.</p></div>
+        <div class="concept"><h4>Flujo de datos</h4><p>Formulario (hijo) → ejecuta <code>onSubmit</code> → llama <code>onAgregar(form)</code> (prop) → App (padre) actualiza <code>contactos</code> → React re-renderiza → nueva tarjeta en pantalla.</p></div>
+        <div class="concept"><h4>Eliminar</h4><p>Se filtra por <code>id</code> usando <code>Array.prototype.filter</code>.</p></div>
+      </div>
+
+      <div class="flow" style="margin-top:34px;">
+        <div class="flow-step"><b>1 · Hijo</b>Formulario ejecuta onSubmit</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><b>2 · Callback</b>Llama onAgregar(form) vía prop</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><b>3 · Padre</b>App actualiza contactos con setContactos</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><b>4 · UI</b>React re-renderiza: nueva tarjeta visible</div>
+      </div>
+    </section>
+
+    <section id="estructura">
+      <div class="eyebrow">03 · Estructura del proyecto (mínima)</div>
+      <h2 style="font-size:30px;">Organización de archivos</h2>
+      <div class="tree">
+        <span class="d1">src/</span>
+        <span class="d2">components/</span>
+        <span class="f">FormularioContacto.jsx</span>
+        <span class="f">ContactoCard.jsx</span>
+        <span class="d1" style="display:block; margin-top:4px;">App.jsx</span>
+        <span class="d1" style="display:block;">App.css</span>
+      </div>
+    </section>
+
+    <section id="pasos">
+      <div class="eyebrow">04 · Desarrollo paso a paso</div>
+      <h2 style="font-size:30px;">Guía didáctica</h2>
+      <div class="steps" id="stepsWrap">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-num">1</div>
+            <h4>Crear el estado y renderizar la lista en App.jsx</h4>
+            <div class="step-chevron">⌄</div>
+          </div>
+          <div class="step-body"><div class="step-body-inner">
+            <ul>
+              <li>Inicializar <code>contactos</code> con un arreglo (1 registro de ejemplo).</li>
+              <li>Crear <code>agregarContacto(nuevo)</code> que haga <code>setContactos([...prev, { id, ...nuevo }])</code>.</li>
+              <li><b>(Nuevo)</b> Crear <code>eliminarContacto(id)</code> que haga <code>filter</code> por id.</li>
+              <li>Pasar <code>onAgregar</code> al formulario y <code>onDelete</code> a cada tarjeta.</li>
+            </ul>
+          </div></div>
+        </div>
+        <div class="step">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-num">2</div>
+            <h4>Construir FormularioContacto.jsx</h4>
+            <div class="step-chevron">⌄</div>
+          </div>
+          <div class="step-body"><div class="step-body-inner">
+            <ul>
+              <li>Estado local <code>form</code> con: nombre, telefono, correo, etiqueta.</li>
+              <li><code>onChange</code> genérico que sincroniza cada input con <code>form</code>.</li>
+              <li><code>onSubmit</code> con <code>e.preventDefault()</code>, validación mínima y llamada a <code>onAgregar(form)</code>.</li>
+              <li>Limpiar el formulario tras enviar.</li>
+            </ul>
+          </div></div>
+        </div>
+        <div class="step">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-num">3</div>
+            <h4>Construir ContactoCard.jsx</h4>
+            <div class="step-chevron">⌄</div>
+          </div>
+          <div class="step-body"><div class="step-body-inner">
+            <ul>
+              <li>Mostrar los datos recibidos por props.</li>
+              <li>Botón Eliminar con <code>type="button"</code> y <code>onClick={() => onDelete(id)}</code>.</li>
+            </ul>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="codigo">
+      <div class="eyebrow">05 · Código final</div>
+      <h2 style="font-size:30px;">Copiar y pegar — y ver corriendo en vivo</h2>
+      <p style="color:var(--ink-soft); max-width:640px; margin-top:10px;">Debajo tienes el código exacto de la guía, y justo después una <b>demo funcionando de verdad</b>: agrega y elimina contactos con el mismo <code>useState</code> que acabas de leer.</p>
+
+      <div class="code-tabs" id="codeTabs">
+        <div class="code-tab active" onclick="showCode(this,'app')">App.jsx</div>
+        <div class="code-tab" onclick="showCode(this,'form')">FormularioContacto.jsx</div>
+        <div class="code-tab" onclick="showCode(this,'card')">ContactoCard.jsx</div>
+        <div class="code-tab" onclick="showCode(this,'css')">App.css</div>
+      </div>
+      <div class="code-window">
+        <div class="code-window-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <span class="path" id="codePath">src/App.jsx</span>
+        </div>
+
+        <div class="code-panel active" id="panel-app"><pre><code><span class="cmt">// Importa el hook para manejar estado local.</span>
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">"react"</span>;
+<span class="cmt">// Importa estilos globales del componente principal.</span>
+<span class="kw">import</span> <span class="str">"./App.css"</span>;
+<span class="cmt">// Importa la tarjeta visual para cada contacto.</span>
+<span class="kw">import</span> ContactoCard <span class="kw">from</span> <span class="str">"./components/ContactoCard"</span>;
+<span class="cmt">// Importa el formulario para crear contactos.</span>
+<span class="kw">import</span> FormularioContacto <span class="kw">from</span> <span class="str">"./components/FormularioContacto"</span>;
+
+<span class="cmt">// Componente principal de la agenda.</span>
+<span class="kw">export default function</span> <span class="fn">App</span>() {
+  <span class="cmt">// Estado: lista de contactos inicial con un ejemplo.</span>
+  <span class="kw">const</span> [contactos, setContactos] = <span class="fn">useState</span>([
+    {
+      <span class="cmt">// Identificador único del contacto.</span>
+      id: <span class="str">1</span>,
+      nombre: <span class="str">"Carolina Pérez"</span>,
+      telefono: <span class="str">"300 123 4567"</span>,
+      correo: <span class="str">"carolina@sena.edu.co"</span>,
+      etiqueta: <span class="str">"Compañera"</span>,
+    },
+  ]);
+
+  <span class="cmt">// Agrega un nuevo contacto al estado.</span>
+  <span class="kw">const</span> agregarContacto = (nuevo) => {
+    <span class="cmt">// Toma el estado previo y agrega el nuevo con un id generado.</span>
+    <span class="fn">setContactos</span>((prev) => [...prev, { id: Date.now(), ...nuevo }]);
+  };
+
+  <span class="cmt">// Elimina un contacto por su id.</span>
+  <span class="kw">const</span> eliminarContacto = (id) => {
+    <span class="cmt">// Filtra todos menos el que coincide con el id a eliminar.</span>
+    <span class="fn">setContactos</span>((prev) => prev.<span class="fn">filter</span>((c) => c.id !== id));
+  };
+
+  <span class="kw">return</span> (
+    &lt;<span class="tagn">main</span> <span class="attr">className</span>=<span class="str">"app-container"</span>&gt;
+      &lt;<span class="tagn">h1</span> <span class="attr">className</span>=<span class="str">"app-title"</span>&gt;Agenda ADSO v2&lt;/<span class="tagn">h1</span>&gt;
+      &lt;<span class="tagn">FormularioContacto</span> <span class="attr">onAgregar</span>={agregarContacto} /&gt;
+      &lt;<span class="tagn">section</span> <span class="attr">className</span>=<span class="str">"lista-contactos"</span>&gt;
+        {contactos.map((c) => (
+          &lt;<span class="tagn">ContactoCard</span>
+            <span class="attr">key</span>={c.id}
+            <span class="attr">id</span>={c.id}
+            <span class="attr">nombre</span>={c.nombre}
+            <span class="attr">telefono</span>={c.telefono}
+            <span class="attr">correo</span>={c.correo}
+            <span class="attr">etiqueta</span>={c.etiqueta}
+            <span class="attr">onDelete</span>={eliminarContacto}
+          /&gt;
+        ))}
+      &lt;/<span class="tagn">section</span>&gt;
+    &lt;/<span class="tagn">main</span>&gt;
+  );
+}</code></pre></div>
+
+        <div class="code-panel" id="panel-form"><pre><code><span class="cmt">// Importa hook para manejar estado del formulario.</span>
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">"react"</span>;
+
+<span class="cmt">// Componente de formulario para crear un contacto.</span>
+<span class="kw">export default function</span> <span class="fn">FormularioContacto</span>({ onAgregar }) {
+  <span class="cmt">// Estado local con los campos del formulario.</span>
+  <span class="kw">const</span> [form, setForm] = <span class="fn">useState</span>({
+    nombre: <span class="str">""</span>,
+    correo: <span class="str">""</span>,
+    telefono: <span class="str">""</span>,
+    etiqueta: <span class="str">""</span>,
+  });
+
+  <span class="cmt">// Actualiza un campo del formulario cuando el usuario escribe.</span>
+  <span class="kw">const</span> onChange = (e) => {
+    <span class="cmt">// Extrae nombre del input y valor actual.</span>
+    <span class="kw">const</span> { name, value } = e.target;
+    <span class="cmt">// Copia estado anterior y reemplaza solo el campo modificado.</span>
+    <span class="fn">setForm</span>((f) => ({ ...f, [name]: value }));
+  };
+
+  <span class="cmt">// Controla el envío del formulario.</span>
+  <span class="kw">const</span> onSubmit = (e) => {
+    <span class="cmt">// Evita que el navegador recargue la página al enviar.</span>
+    e.<span class="fn">preventDefault</span>();
+    <span class="cmt">// Valida que nombre y teléfono no estén vacíos.</span>
+    <span class="kw">if</span> (!form.nombre.trim() || !form.telefono.trim()) {
+      <span class="fn">alert</span>(<span class="str">"Completa al menos Nombre y Teléfono"</span>);
+      <span class="kw">return</span>;
+    }
+    <span class="cmt">// Envía los datos al componente padre para agregarlos a la lista.</span>
+    <span class="fn">onAgregar</span>(form);
+    <span class="cmt">// Limpia el formulario después de guardar.</span>
+    <span class="fn">setForm</span>({ nombre: <span class="str">""</span>, correo: <span class="str">""</span>, telefono: <span class="str">""</span>, etiqueta: <span class="str">""</span> });
+  };
+
+  <span class="kw">return</span> (
+    &lt;<span class="tagn">form</span> <span class="attr">onSubmit</span>={onSubmit} <span class="attr">className</span>=<span class="str">"form-contacto"</span>&gt;
+      &lt;<span class="tagn">input</span> <span class="attr">name</span>=<span class="str">"nombre"</span> <span class="attr">placeholder</span>=<span class="str">"Nombre"</span> <span class="attr">value</span>={form.nombre} <span class="attr">onChange</span>={onChange} /&gt;
+      &lt;<span class="tagn">input</span> <span class="attr">name</span>=<span class="str">"telefono"</span> <span class="attr">placeholder</span>=<span class="str">"Teléfono"</span> <span class="attr">value</span>={form.telefono} <span class="attr">onChange</span>={onChange} /&gt;
+      &lt;<span class="tagn">input</span> <span class="attr">name</span>=<span class="str">"correo"</span> <span class="attr">placeholder</span>=<span class="str">"Correo"</span> <span class="attr">value</span>={form.correo} <span class="attr">onChange</span>={onChange} /&gt;
+      &lt;<span class="tagn">input</span> <span class="attr">name</span>=<span class="str">"etiqueta"</span> <span class="attr">placeholder</span>=<span class="str">"Etiqueta (opcional)"</span> <span class="attr">value</span>={form.etiqueta} <span class="attr">onChange</span>={onChange} /&gt;
+      &lt;<span class="tagn">button</span> <span class="attr">type</span>=<span class="str">"submit"</span>&gt;Agregar contacto&lt;/<span class="tagn">button</span>&gt;
+    &lt;/<span class="tagn">form</span>&gt;
+  );
+}</code></pre></div>
+
+        <div class="code-panel" id="panel-card"><pre><code><span class="cmt">// ContactoCard.jsx — construido según la especificación de la guía:</span>
+<span class="cmt">// recibe los datos por props y expone un botón Eliminar type="button".</span>
+
+<span class="cmt">// Componente que muestra la tarjeta visual de un contacto.</span>
+<span class="kw">export default function</span> <span class="fn">ContactoCard</span>({ id, nombre, telefono, correo, etiqueta, onDelete }) {
+  <span class="kw">return</span> (
+    &lt;<span class="tagn">article</span> <span class="attr">className</span>=<span class="str">"tarjeta-contacto"</span>&gt;
+      &lt;<span class="tagn">h3</span>&gt;{nombre}&lt;/<span class="tagn">h3</span>&gt;
+      &lt;<span class="tagn">p</span> <span class="attr">className</span>=<span class="str">"dato"</span>&gt;📞 {telefono}&lt;/<span class="tagn">p</span>&gt;
+      {correo &amp;&amp; &lt;<span class="tagn">p</span> <span class="attr">className</span>=<span class="str">"dato"</span>&gt;✉️ {correo}&lt;/<span class="tagn">p</span>&gt;}
+      {etiqueta &amp;&amp; &lt;<span class="tagn">p</span> <span class="attr">className</span>=<span class="str">"tag"</span>&gt;{etiqueta}&lt;/<span class="tagn">p</span>&gt;}
+      &lt;<span class="tagn">div</span> <span class="attr">className</span>=<span class="str">"acciones"</span>&gt;
+        {<span class="cmt">/* type="button" evita que dispare un submit accidental */</span>}
+        &lt;<span class="tagn">button</span>
+          <span class="attr">type</span>=<span class="str">"button"</span>
+          <span class="attr">className</span>=<span class="str">"btn-eliminar"</span>
+          <span class="attr">onClick</span>={() => <span class="fn">onDelete</span>(id)}
+        &gt;
+          Eliminar
+        &lt;/<span class="tagn">button</span>&gt;
+      &lt;/<span class="tagn">div</span>&gt;
+    &lt;/<span class="tagn">article</span>&gt;
+  );
+}</code></pre></div>
+
+        <div class="code-panel" id="panel-css"><pre><code><span class="tagn">.app-container</span> { max-width: 520px; margin: 2rem auto; font-family: Arial, sans-serif; }
+<span class="tagn">.app-title</span> { color:#008037; text-align:center; margin-bottom:1rem; }
+<span class="tagn">.form-contacto</span> { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+<span class="tagn">.form-contacto input</span> { padding:8px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
+<span class="tagn">.form-contacto button</span> { background:#008037; color:#fff; border:0; padding:10px; border-radius:6px; cursor:pointer; }
+<span class="tagn">.form-contacto button:hover</span> { background:#006b2f; }
+<span class="tagn">.tarjeta-contacto</span> { border:1px solid #ddd; border-radius:8px; padding:1rem; background:#fff; margin-bottom:.5rem; display:flex; flex-direction:column; gap:4px; }
+<span class="tagn">.tarjeta-contacto h3</span> { color:#008037; margin:0 0 .3rem; }
+<span class="tagn">.tarjeta-contacto .dato</span> { margin: 0; color: #333; }
+<span class="tagn">.tarjeta-contacto .tag</span> { margin: 0; color: #555; font-size: 0.9rem; }
+<span class="tagn">.tarjeta-contacto .acciones</span> { margin-top: 8px; display: flex; justify-content: flex-end; }
+<span class="tagn">.btn-eliminar</span> { background:#c62828; color:#fff; border:0; padding:.5rem .75rem; border-radius:6px; cursor:pointer; margin-top:0; }
+<span class="tagn">.btn-eliminar:hover</span> { background:#8e0000; }</code></pre></div>
+      </div>
+
+      <!-- LIVE DEMO -->
+      <div class="demo-wrap">
+        <div class="demo-bar">
+          <div class="demo-bar-left">
+            <span class="r"></span><span class="y"></span><span class="g"></span>
+            <span class="demo-bar-label">localhost:5173 — Agenda ADSO v2</span>
+          </div>
+          <div class="demo-live-badge"><span class="pulse"></span> corriendo en vivo</div>
+        </div>
+        <div class="demo-stage">
+          <div id="reactRoot"></div>
+        </div>
+        <div class="demo-note">Esta demo ejecuta <b>el mismo código</b> de arriba con React real en el navegador. Agrega un contacto y elimínalo para ver <code>useState</code> y el flujo hijo → padre funcionando de verdad.</div>
+      </div>
+    </section>
+
+    <section id="verificacion">
+      <div class="eyebrow">06 · Verificación rápida</div>
+      <h2 style="font-size:30px;">Pasos de prueba</h2>
+      <p style="color:var(--ink-soft); margin-top:8px;">Marca cada paso cuando lo compruebes en tu propio proyecto.</p>
+      <div class="check-list" id="checkList">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="txt">Ejecuta <code>npm run dev</code> y abre <code>http://localhost:5173/</code>.</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="txt">Escribe Nombre y Teléfono → "Agregar contacto" → debe aparecer debajo.</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="txt">Presiona Eliminar en una tarjeta → debe desaparecer de la lista.</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="txt">Consola limpia (sin errores).</span></div>
+      </div>
+      <div class="note-box">📌 Nota: la persistencia (que no se borre al recargar) se agrega en <b>Clase 9</b> con LocalStorage — todavía no en esta clase.</div>
+    </section>
+
+    <section id="actividades">
+      <div class="eyebrow">07 · Actividades y entrega en Classroom</div>
+      <h2 style="font-size:30px;">Qué debes entregar</h2>
+      <div class="check-list">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="txt">Implementa el formulario controlado y agrega mínimo 3 contactos reales (nombres de tu equipo).</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="txt">Elimina 1 contacto y verifica que desaparece.</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="txt">Sube las capturas y el enlace de tu repositorio con la etiqueta: <code>Agenda ADSO v2</code>.</span></div>
+      </div>
+      <div class="note-box">📸 Recuerda incluir evidencias: (1) formulario funcionando con 3 contactos, (2) botón Eliminar antes/después, (3) fragmentos de <code>App.jsx</code>, <code>FormularioContacto.jsx</code> y <code>ContactoCard.jsx</code>.</div>
+    </section>
+
+    <section id="preguntas">
+      <div class="eyebrow">08 · Preguntas de verificación</div>
+      <h2 style="font-size:30px;">Para pensar antes de la próxima clase</h2>
+      <div class="qa">
+        <div class="qa-item" onclick="toggleQA(this)">
+          <div class="qa-q">¿Qué es un formulario controlado y por qué se usa value + onChange?<span class="plus">+</span></div>
+          <div class="qa-a"><div class="qa-a-inner">Piensa en cómo el estado de React se convierte en la única fuente de verdad del valor del input, y qué pasaría si solo usaras <code>value</code> sin <code>onChange</code>.</div></div>
+        </div>
+        <div class="qa-item" onclick="toggleQA(this)">
+          <div class="qa-q">¿Qué hace useState y cuándo se vuelve a renderizar el componente?<span class="plus">+</span></div>
+          <div class="qa-a"><div class="qa-a-inner">Revisa qué dispara exactamente un nuevo render: ¿es la llamada a la función que actualiza el estado, o el cambio de valor en sí?</div></div>
+        </div>
+        <div class="qa-item" onclick="toggleQA(this)">
+          <div class="qa-q">¿Por qué usamos filter para eliminar por id?<span class="plus">+</span></div>
+          <div class="qa-a"><div class="qa-a-inner">Compáralo con modificar el arreglo original directamente: ¿por qué React necesita un arreglo nuevo para detectar el cambio?</div></div>
+        </div>
+        <div class="qa-item" onclick="toggleQA(this)">
+          <div class="qa-q">¿Por qué el botón Eliminar tiene type="button"?<span class="plus">+</span></div>
+          <div class="qa-a"><div class="qa-a-inner">Piensa qué ocurre si un botón dentro de un <code>&lt;form&gt;</code> no declara su <code>type</code> explícitamente.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="criterios">
+      <div class="eyebrow">09 · Criterios de logro</div>
+      <h2 style="font-size:30px;">Cómo se evalúa esta clase</h2>
+      <div class="criteria">
+        <div class="c"><span class="ok">✓</span>Usa <code>useState</code> y eventos (<code>onChange</code>, <code>onSubmit</code>) correctamente.</div>
+        <div class="c"><span class="ok">✓</span>Agrega contactos a la lista renderizada.</div>
+        <div class="c"><span class="ok">✓</span>El botón Eliminar funciona por <code>id</code>.</div>
+        <div class="c"><span class="ok">✓</span>Código organizado, nombres claros y sin errores en consola.</div>
+      </div>
+    </section>
+
+    <footer class="page-foot">
+      Clase 4 — useState y Formularios controlados · Agenda ADSO v2 · Programa ADSO, CTMA, Regional Antioquia — SENA.
+    </footer>
+  </main>
+</div>
+
+<!-- React runtime for the live demo -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+<script>
+  // ---------- nav active state on scroll ----------
+  const navLinks = document.querySelectorAll('.rail-nav a');
+  const sections = Array.from(navLinks).map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function onScroll(){
+    let currentIndex = 0;
+    sections.forEach((sec, i) => {
+      const rect = sec.getBoundingClientRect();
+      if (rect.top <= 140) currentIndex = i;
+    });
+    navLinks.forEach((a,i) => a.classList.toggle('active', i === currentIndex));
+  }
+  document.addEventListener('scroll', onScroll);
+  onScroll();
+
+  // ---------- accordion: steps ----------
+  function toggleStep(head){
+    const step = head.parentElement;
+    const body = step.querySelector('.step-body');
+    const isOpen = step.classList.contains('open');
+    document.querySelectorAll('#stepsWrap .step').forEach(s => {
+      s.classList.remove('open');
+      s.querySelector('.step-body').style.maxHeight = null;
+    });
+    if(!isOpen){
+      step.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  }
+  // open the first step's height on load
+  window.addEventListener('load', () => {
+    const openStep = document.querySelector('#stepsWrap .step.open .step-body');
+    if(openStep) openStep.style.maxHeight = openStep.scrollHeight + 'px';
+  });
+
+  // ---------- code tabs ----------
+  function showCode(tab, key){
+    document.querySelectorAll('#codeTabs .code-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + key).classList.add('active');
+    const paths = { app:'src/App.jsx', form:'src/components/FormularioContacto.jsx', card:'src/components/ContactoCard.jsx', css:'src/App.css' };
+    document.getElementById('codePath').textContent = paths[key];
+  }
+
+  // ---------- checklists ----------
+  function toggleCheck(item){ item.classList.toggle('done'); }
+
+  // ---------- Q&A accordion ----------
+  function toggleQA(item){
+    const wasOpen = item.classList.contains('open');
+    item.parentElement.querySelectorAll('.qa-item').forEach(q => {
+      q.classList.remove('open');
+      q.querySelector('.qa-a').style.maxHeight = null;
+    });
+    if(!wasOpen){
+      item.classList.add('open');
+      const a = item.querySelector('.qa-a');
+      a.style.maxHeight = a.scrollHeight + 'px';
+    }
+  }
+</script>
+
+<!-- Live React app: exact logic from the class, running for real -->
+<script type="text/babel" data-presets="react">
+  const { useState } = React;
+
+  function ContactoCard({ id, nombre, telefono, correo, etiqueta, onDelete }) {
+    return (
+      <article className="tarjeta-contacto">
+        <h3>{nombre}</h3>
+        <p className="dato">📞 {telefono}</p>
+        {correo && <p className="dato">✉️ {correo}</p>}
+        {etiqueta && <p className="tag">{etiqueta}</p>}
+        <div className="acciones">
+          <button type="button" className="btn-eliminar" onClick={() => onDelete(id)}>
+            Eliminar
+          </button>
+        </div>
+      </article>
+    );
+  }
+
+  function FormularioContacto({ onAgregar }) {
+    const [form, setForm] = useState({ nombre: "", correo: "", telefono: "", etiqueta: "" });
+
+    const onChange = (e) => {
+      const { name, value } = e.target;
+      setForm((f) => ({ ...f, [name]: value }));
+    };
+
+    const onSubmit = (e) => {
+      e.preventDefault();
+      if (!form.nombre.trim() || !form.telefono.trim()) {
+        alert("Completa al menos Nombre y Teléfono");
+        return;
+      }
+      onAgregar(form);
+      setForm({ nombre: "", correo: "", telefono: "", etiqueta: "" });
+    };
+
+    return (
+      <form onSubmit={onSubmit} className="form-contacto">
+        <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={onChange} />
+        <input name="telefono" placeholder="Teléfono" value={form.telefono} onChange={onChange} />
+        <input name="correo" placeholder="Correo" value={form.correo} onChange={onChange} />
+        <input name="etiqueta" placeholder="Etiqueta (opcional)" value={form.etiqueta} onChange={onChange} />
+        <button type="submit">Agregar contacto</button>
+      </form>
+    );
+  }
+
+  function App() {
+    const [contactos, setContactos] = useState([
+      { id: 1, nombre: "Carolina Pérez", telefono: "300 123 4567", correo: "carolina@sena.edu.co", etiqueta: "Compañera" },
+    ]);
+
+    const agregarContacto = (nuevo) => {
+      setContactos((prev) => [...prev, { id: Date.now(), ...nuevo }]);
+    };
+
+    const eliminarContacto = (id) => {
+      setContactos((prev) => prev.filter((c) => c.id !== id));
+    };
+
+    return (
+      <main className="app-container">
+        <h1 className="app-title">Agenda ADSO v2</h1>
+        <FormularioContacto onAgregar={agregarContacto} />
+        <section className="lista-contactos">
+          {contactos.length === 0 && <p className="empty-state">Aún no hay contactos — agrega el primero arriba.</p>}
+          {contactos.map((c) => (
+            <ContactoCard
+              key={c.id}
+              id={c.id}
+              nombre={c.nombre}
+              telefono={c.telefono}
+              correo={c.correo}
+              etiqueta={c.etiqueta}
+              onDelete={eliminarContacto}
+            />
+          ))}
+        </section>
+      </main>
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('reactRoot'));
+  root.render(<App />);
+</script>
+
+</body>
+</html>
