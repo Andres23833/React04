@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function formularioContacto({ agregarContacto }) {
+export default function FormularioContacto({ onAgregar }) {
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [correo, setCorreo] = useState("");
@@ -17,7 +17,7 @@ function formularioContacto({ agregarContacto }) {
       etiqueta,
     };
 
-    agregarContacto(nuevoContacto);
+    onAgregar(nuevoContacto);
 
     // Limpiar campos
     setNombre("");
@@ -121,5 +121,3 @@ function formularioContacto({ agregarContacto }) {
     </form>
   );
 }
-
-export default formularioContacto;

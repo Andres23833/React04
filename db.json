@@ -1,0 +1,12 @@
+{
+  "contactos": [
+    {
+      "nombre": "juan",
+      "telefono": "093940",
+      "correo": "juan@gmail.com",
+      "etiqueta": "Trabajo",
+      "id": "NNd7-2Fn2LE"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
