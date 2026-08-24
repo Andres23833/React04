@@ -6,6 +6,13 @@
       "correo": "juan@gmail.com",
       "etiqueta": "Trabajo",
       "id": "NNd7-2Fn2LE"
+    },
+    {
+      "nombre": "andres",
+      "telefono": "982912",
+      "correo": "andres@gmail.com",
+      "etiqueta": "Trabajo",
+      "id": "QX0eFFRYRgA"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
