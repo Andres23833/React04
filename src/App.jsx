@@ -9,6 +9,7 @@ const API = "http://localhost:3002/contactos";
 export default function App() {
   const [contactos, setContactos] = useState([]);
   const [buscar, setBuscar] = useState("");
+  const [ordenAsc, setOrdenAsc] = useState(true); // true = A-Z, false = Z-A
   const [error, setError] = useState(""); // Banner de error global (API)
   const [mensajeExito, setMensajeExito] = useState(""); // Mini reto: mensaje verde de éxito
   const [cargando, setCargando] = useState(false);
@@ -74,14 +75,33 @@ export default function App() {
       });
   };
 
-  // Filtrar contactos según el texto de búsqueda de forma segura
-  const contactosFiltrados = contactos.filter((c) =>
-    c.nombre?.toLowerCase().includes(buscar.toLowerCase())
-  );
+  // Filtrar contactos según el texto de búsqueda (nombre, correo o etiqueta de forma segura)
+  const contactosFiltrados = contactos.filter((c) => {
+    const termino = buscar.toLowerCase();
+    const nombre = (c.nombre || "").toLowerCase();
+    const correo = (c.correo || "").toLowerCase();
+    const etiqueta = (c.etiqueta || "").toLowerCase();
+
+    return (
+      nombre.includes(termino) ||
+      correo.includes(termino) ||
+      etiqueta.includes(termino)
+    );
+  });
+
+  // Ordenar alfabéticamente (A-Z / Z-A) sobre una copia del arreglo filtrado
+  const contactosOrdenados = [...contactosFiltrados].sort((a, b) => {
+    const nombreA = (a.nombre || "").toLowerCase();
+    const nombreB = (b.nombre || "").toLowerCase();
+
+    if (nombreA < nombreB) return ordenAsc ? -1 : 1;
+    if (nombreA > nombreB) return ordenAsc ? 1 : -1;
+    return 0;
+  });
 
   return (
     <main className="app-container">
-      <h1 className="app-title">Agenda ADSO v6</h1>
+      <h1 className="app-title">Agenda ADSO v8</h1>
 
       {/* Banner de error global (Rojo) */}
       {error && (
@@ -97,24 +117,34 @@ export default function App() {
         </div>
       )}
 
-      {/* Barra de búsqueda */}
-      <div className="campo-busqueda" style={{ marginBottom: "20px" }}>
+      {/* Barra de búsqueda y Botón de Ordenamiento */}
+      <div className="flex flex-col md:flex-row md:items-center gap-3" style={{ marginBottom: "20px" }}>
         <input
           type="text"
-          placeholder="Buscar contacto por nombre..."
+          placeholder="Buscar por nombre, correo o etiqueta..."
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
-          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--borde)" }}
+          style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--borde)" }}
         />
+        <button
+          type="button"
+          onClick={() => setOrdenAsc((prev) => !prev)}
+          style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid var(--borde)", cursor: "pointer", fontWeight: "500", background: "rgba(255,255,255,0.05)" }}
+        >
+          {ordenAsc ? "🔤 Ordenar Z-A" : "🔤 Ordenar A-Z"}
+        </button>
       </div>
 
       {/* Formulario para agregar */}
       <FormularioContacto onAgregar={agregarContacto} />
 
-      {/* Lista de tarjetas filtradas */}
+      {/* Lista de tarjetas filtradas y ordenadas */}
       <div className="lista-contactos" style={{ marginTop: "20px" }}>
         {cargando && <p style={{ color: "#94a3b8" }}>Cargando contactos...</p>}
-        {contactosFiltrados.map((c) => (
+        {!cargando && contactosOrdenados.length === 0 && (
+          <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px" }}>No se encontraron contactos.</p>
+        )}
+        {contactosOrdenados.map((c) => (
           <ContactoCard
             key={c.id}
             {...c}

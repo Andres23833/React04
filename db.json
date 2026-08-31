@@ -27,6 +27,13 @@
       "correo": "ana@gmail.com",
       "etiqueta": "Personal",
       "id": "CFi2yBRHcmE"
+    },
+    {
+      "nombre": "laverde",
+      "telefono": "2347748",
+      "correo": "laverde@gmail.com",
+      "etiqueta": "Familia",
+      "id": "WxnBaWvduIQ"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
