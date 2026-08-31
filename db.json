@@ -13,6 +13,20 @@
       "correo": "andres@gmail.com",
       "etiqueta": "Trabajo",
       "id": "QX0eFFRYRgA"
+    },
+    {
+      "nombre": "miguel",
+      "telefono": "29188289",
+      "correo": "miguel@gmail.com",
+      "etiqueta": "Personal",
+      "id": "lAs7gReDa-Y"
+    },
+    {
+      "nombre": "ana",
+      "telefono": "0921922",
+      "correo": "ana@gmail.com",
+      "etiqueta": "Personal",
+      "id": "CFi2yBRHcmE"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
