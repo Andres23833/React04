@@ -10,11 +10,15 @@ export default function App() {
   const [contactos, setContactos] = useState([]);
   const [buscar, setBuscar] = useState("");
   const [ordenAsc, setOrdenAsc] = useState(true); // true = A-Z, false = Z-A
-  const [error, setError] = useState(""); // Banner de error global (API)
-  const [mensajeExito, setMensajeExito] = useState(""); // Mini reto: mensaje verde de éxito
+  const [error, setError] = useState(""); 
+  const [mensajeExito, setMensajeExito] = useState(""); 
   const [cargando, setCargando] = useState(false);
 
-  // GET – Cargar contactos desde la API con manejo de errores amigable
+  // Estados de la paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [contactosPorPagina] = useState(3);
+
+  // GET – Cargar contactos desde la API
   const cargarContactos = async () => {
     try {
       setCargando(true);
@@ -35,7 +39,7 @@ export default function App() {
     cargarContactos();
   }, []);
 
-  // POST – Agregar un nuevo contacto a la API
+  // POST – Agregar un nuevo contacto
   const agregarContacto = async (nuevoContacto) => {
     try {
       setError("");
@@ -52,9 +56,8 @@ export default function App() {
       const contactoCreado = await res.json();
       setContactos((prev) => [...prev, contactoCreado]);
 
-      // Mini reto: Mensaje de éxito verde
       setMensajeExito("¡Contacto guardado correctamente!");
-      setTimeout(() => setMensajeExito(""), 4000); // Se oculta a los 4 segundos
+      setTimeout(() => setMensajeExito(""), 4000);
     } catch (err) {
       console.error("Error al agregar contacto:", err);
       setError("No se pudo guardar el contacto en el servidor.");
@@ -62,7 +65,7 @@ export default function App() {
     }
   };
 
-  // DELETE – Eliminar un contacto por su ID en la API
+  // DELETE – Eliminar un contacto por su ID
   const eliminarContacto = (id) => {
     fetch(`${API}/${id}`, { method: "DELETE" })
       .then((res) => {
@@ -75,7 +78,7 @@ export default function App() {
       });
   };
 
-  // Filtrar contactos según el texto de búsqueda (nombre, correo o etiqueta de forma segura)
+  // Filtrar contactos
   const contactosFiltrados = contactos.filter((c) => {
     const termino = buscar.toLowerCase();
     const nombre = (c.nombre || "").toLowerCase();
@@ -89,7 +92,7 @@ export default function App() {
     );
   });
 
-  // Ordenar alfabéticamente (A-Z / Z-A) sobre una copia del arreglo filtrado
+  // Ordenar alfabéticamente
   const contactosOrdenados = [...contactosFiltrados].sort((a, b) => {
     const nombreA = (a.nombre || "").toLowerCase();
     const nombreB = (b.nombre || "").toLowerCase();
@@ -99,58 +102,139 @@ export default function App() {
     return 0;
   });
 
-  return (
-    <main className="app-container">
-      <h1 className="app-title">Agenda ADSO v8</h1>
+  // Lógica de Paginación
+  const totalPaginas = Math.ceil(contactosOrdenados.length / contactosPorPagina);
+  const indiceInicio = (paginaActual - 1) * contactosPorPagina;
+  const indiceFin = indiceInicio + contactosPorPagina;
+  const contactosPaginados = contactosOrdenados.slice(indiceInicio, indiceFin);
 
-      {/* Banner de error global (Rojo) */}
+  const cambiarPagina = (nuevaPagina) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
+  return (
+    <main className="app-container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
+      <h1 className="app-title" style={{ gridColumn: "1 / -1", marginBottom: "20px" }}>Agenda ADSO v8</h1>
+
+      {/* Banners globales de alerta */}
       {error && (
-        <div style={{ backgroundColor: "#fee2e2", border: "1px solid #f87171", borderRadius: "12px", padding: "12px 16px", marginBottom: "20px" }}>
+        <div style={{ gridColumn: "1 / -1", backgroundColor: "#fee2e2", border: "1px solid #f87171", borderRadius: "12px", padding: "12px 16px", marginBottom: "20px" }}>
           <p style={{ color: "#b91c1c", fontSize: "14px", fontWeight: "500", margin: 0 }}>{error}</p>
         </div>
       )}
 
-      {/* Mini reto: Banner de éxito (Verde) */}
       {mensajeExito && (
-        <div style={{ backgroundColor: "#d1fae5", border: "1px solid #34d399", borderRadius: "12px", padding: "12px 16px", marginBottom: "20px" }}>
+        <div style={{ gridColumn: "1 / -1", backgroundColor: "#d1fae5", border: "1px solid #34d399", borderRadius: "12px", padding: "12px 16px", marginBottom: "20px" }}>
           <p style={{ color: "#065f46", fontSize: "14px", fontWeight: "500", margin: 0 }}>{mensajeExito}</p>
         </div>
       )}
 
-      {/* Barra de búsqueda y Botón de Ordenamiento */}
-      <div className="flex flex-col md:flex-row md:items-center gap-3" style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="Buscar por nombre, correo o etiqueta..."
-          value={buscar}
-          onChange={(e) => setBuscar(e.target.value)}
-          style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--borde)" }}
-        />
-        <button
-          type="button"
-          onClick={() => setOrdenAsc((prev) => !prev)}
-          style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid var(--borde)", cursor: "pointer", fontWeight: "500", background: "rgba(255,255,255,0.05)" }}
-        >
-          {ordenAsc ? "🔤 Ordenar Z-A" : "🔤 Ordenar A-Z"}
-        </button>
-      </div>
+      {/* Contenedor principal en dos columnas */}
+      <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: "30px", alignItems: "start" }}>
+        
+        {/* Columna Izquierda: Formulario con fondo más visible y elegante */}
+        <aside style={{ background: "rgba(30, 41, 59, 0.7)", padding: "24px", borderRadius: "14px", border: "1px solid rgba(255, 255, 255, 0.15)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
+          <h3 style={{ marginTop: 0, marginBottom: "15px", fontSize: "18px", color: "#f8fafc" }}>Nuevo Contacto</h3>
+          <FormularioContacto onAgregar={agregarContacto} />
+        </aside>
 
-      {/* Formulario para agregar */}
-      <FormularioContacto onAgregar={agregarContacto} />
+        {/* Columna Derecha: Búsqueda, Controles, Tarjetas y Paginación */}
+        <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          
+          {/* Barra de búsqueda con fondo claro y texto visible */}
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, correo o etiqueta..."
+              value={buscar}
+              onChange={(e) => {
+                setBuscar(e.target.value);
+                setPaginaActual(1);
+              }}
+              style={{ 
+                flex: 1, 
+                padding: "12px 16px", 
+                borderRadius: "10px", 
+                border: "1px solid rgba(255, 255, 255, 0.3)", 
+                background: "rgba(30, 41, 59, 0.8)", 
+                color: "#ffffff",
+                fontSize: "15px",
+                outline: "none"
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setOrdenAsc((prev) => !prev)}
+              style={{ padding: "12px 18px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.2)", cursor: "pointer", fontWeight: "500", background: "rgba(30, 41, 59, 0.9)", color: "#ffffff", whiteSpace: "nowrap" }}
+            >
+              {ordenAsc ? "🔤 Ordenar Z-A" : "🔤 Ordenar A-Z"}
+            </button>
+          </div>
 
-      {/* Lista de tarjetas filtradas y ordenadas */}
-      <div className="lista-contactos" style={{ marginTop: "20px" }}>
-        {cargando && <p style={{ color: "#94a3b8" }}>Cargando contactos...</p>}
-        {!cargando && contactosOrdenados.length === 0 && (
-          <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px" }}>No se encontraron contactos.</p>
-        )}
-        {contactosOrdenados.map((c) => (
-          <ContactoCard
-            key={c.id}
-            {...c}
-            onEliminar={() => eliminarContacto(c.id)}
-          />
-        ))}
+          {/* Lista de contactos */}
+          <div className="lista-contactos" style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+            {cargando && <p style={{ color: "#94a3b8" }}>Cargando contactos...</p>}
+            {!cargando && contactosOrdenados.length === 0 && (
+              <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px" }}>No se encontraron contactos.</p>
+            )}
+            
+            {contactosPaginados.map((c) => (
+              <ContactoCard
+                key={c.id}
+                {...c}
+                onEliminar={() => eliminarContacto(c.id)}
+              />
+            ))}
+          </div>
+
+          {/* Controles de Paginación */}
+          {totalPaginas > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "10px" }}>
+              <button
+                onClick={() => cambiarPagina(paginaActual - 1)}
+                disabled={paginaActual === 1}
+                style={{ padding: "8px 14px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.2)", cursor: paginaActual === 1 ? "not-allowed" : "pointer", opacity: paginaActual === 1 ? 0.4 : 1, background: "rgba(30, 41, 59, 0.6)", color: "#fff" }}
+              >
+                ← Anterior
+              </button>
+              
+              {Array.from({ length: totalPaginas }, (_, index) => {
+                const numeroPagina = index + 1;
+                const esActiva = numeroPagina === paginaActual;
+                return (
+                  <button
+                    key={numeroPagina}
+                    onClick={() => cambiarPagina(numeroPagina)}
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "8px",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      background: esActiva ? "#7c3aed" : "rgba(30, 41, 59, 0.6)",
+                      color: "#fff",
+                      cursor: "pointer",
+                      fontWeight: "600"
+                    }}
+                  >
+                    {numeroPagina}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => cambiarPagina(paginaActual + 1)}
+                disabled={paginaActual === totalPaginas}
+                style={{ padding: "8px 14px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.2)", cursor: paginaActual === totalPaginas ? "not-allowed" : "pointer", opacity: paginaActual === totalPaginas ? 0.4 : 1, background: "rgba(30, 41, 59, 0.6)", color: "#fff" }}
+              >
+                Siguiente →
+              </button>
+            </div>
+          )}
+
+        </section>
+
       </div>
     </main>
   );
